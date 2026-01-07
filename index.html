@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5分後の自分予報</title>
+    
+    <!-- ここにアイコン（ファビコン）の設定を追加しました -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>☁️</text></svg>">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Noto+Sans+JP:wght@400;700&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f2f2f2;
+            --text-color: #5a5a5a;
+            --accent-blue: #b0c4de;
+            --accent-yellow: #e9e4b2;
+            --card-bg: #ffffff;
+            --btn-hover: #fafafa;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Zen Kaku Gothic New', 'Noto Sans JP', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #app {
+            width: 90%;
+            max-width: 450px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 1rem;
+            font-weight: 400;
+            margin-bottom: 4rem;
+            letter-spacing: 0.2em;
+            color: #999;
+        }
+
+        .question-container {
+            opacity: 0;
+            transform: translateY(10px);
+            animation: fadeIn 0.6s ease 0.2s forwards;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .question-text {
+            font-size: 1.2rem;
+            line-height: 1.8;
+            margin-bottom: 4rem;
+            min-height: 4em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 20px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+        }
+
+        button {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            border: 1px solid #ddd;
+            background: var(--card-bg);
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-size: 1.1rem;
+            color: var(--text-color);
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        button:hover {
+            background: var(--btn-hover);
+            border-color: var(--accent-blue);
+            transform: scale(1.03);
+        }
+
+        .yes-btn:active { background-color: var(--accent-blue); color: white; }
+        .no-btn:active { background-color: #eee; }
+
+        .result-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: #444;
+        }
+
+        .result-desc {
+            font-size: 1rem;
+            line-height: 1.8;
+            margin-bottom: 2rem;
+        }
+
+        .witty-remark {
+            font-size: 0.85rem;
+            color: #999;
+            font-style: italic;
+            margin-bottom: 3rem;
+            padding: 10px;
+            border-top: 1px dashed #ddd;
+            display: inline-block;
+        }
+
+        .retry-btn {
+            width: auto;
+            height: auto;
+            border-radius: 40px;
+            padding: 12px 40px;
+            font-size: 0.8rem;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app"></div>
+
+    <script>
+        const questions = [
+            "今、座り直したい気持ちが少しある",
+            "さっきから同じことを考えている気がする",
+            "「今じゃなくてもいいか」が頭をよぎった",
+            "飲み物を取りに行こうか一瞬迷った",
+            "画面を見てるのに、内容が全部は入ってきていない",
+            "5分後の自分が、今よりちゃんとしてるとは思えない"
+        ];
+
+        const results = {
+            "000000": ["静かな5分後", "何も起きない。たぶん天井を見てる。"],
+            "000001": ["謎の反省タイム突入", "「さっきのあれ、いらなかったな」と思う。"],
+            "000010": ["やる気の芽が一瞬出る", "すぐ引っ込む。"],
+            "000011": ["急に現実的になる", "「まあ今日はこれでいいか」と納得。"],
+            "000100": ["脳内で独り言が増える", "声には出さないが会話はしている。"],
+            "000101": ["何かを確認しに行って忘れる", "戻ってきた時には目的不明。"],
+            "000110": ["軽くため息をつく", "理由は特にない。"],
+            "000111": ["ちょっと賢くなった気がする", "気のせい。"],
+            "001000": ["姿勢を直す", "3秒で元に戻る。"],
+            "001001": ["昔の記憶が急に出てくる", "今じゃなくていいやつ。"],
+            "001010": ["やる気が出そうで出ない", "境界線をうろつく。"],
+            "001011": ["スマホを置こうとして失敗", "持ち替えただけ。"],
+            "001100": ["何か飲みたくなる", "水かコーヒーかで迷う。"],
+            "001101": ["「あと5分」が発生", "ここが分岐点。"],
+            "001110": ["軽く現実逃避", "空想はやや前向き。"],
+            "001111": ["自分に甘くなる", "今日は特別、という理由を生成。"],
+            "010000": ["急にやる気が出る", "5分限定。"],
+            "010001": ["やるべきことを1つ思い出す", "実行するかは別。"],
+            "010010": ["ToDoを見て閉じる", "情報量が多すぎた。"],
+            "010011": ["一旦落ち着こうとする", "成功率40%。"],
+            "010100": ["軽く焦る", "でもまだ本気じゃない。"],
+            "010101": ["「今じゃない」を選択", "判断は正しい可能性あり。"],
+            "010110": ["作業BGMを探し始める", "選曲に5分使う。"],
+            "010111": ["急に効率を語りたくなる", "行動は伴わない。"],
+            "011000": ["何か始めるが中断", "理由は通知。"],
+            "011001": ["自分を励ます", "「まあ悪くない」"],
+            "011010": ["ちょっと未来を想像する", "都合のいいやつ。"],
+            "011011": ["軽い罪悪感発生", "反映は少し先。"],
+            "011100": ["甘いものを探す", "見つかると満足。"],
+            "011101": ["何もしてないのに疲れる", "精神的なやつ。"],
+            "011110": ["5分が10分になる", "時空が歪む。"],
+            "011111": ["一旦すべてを諦める", "そして少し楽になる。"],
+            "100000": ["スマホを眺め続ける", "情報は頭に入らない。"],
+            "100001": ["通知を確認して後悔", "でもまた見る。"],
+            "100010": ["無意識スクロール開始", "親指が止まらない。"],
+            "100011": ["「何見てたっけ？」状態", "記憶が消える。"],
+            "100100": ["誰かに連絡しようか迷う", "送らない。"],
+            "100101": ["時間を無駄にした感覚", "実害は小さい。"],
+            "100110": ["関係ない情報を学ぶ", "明日には忘れる。"],
+            "100111": ["軽く笑う", "なぜかは不明。"],
+            "101000": ["姿勢が悪化する", "首が前に出る。"],
+            "101001": ["現実逃避レベル2", "ちょっと楽しい。"],
+            "101010": ["やる気とだるさが同居", "不安定。"],
+            "101011": ["「今やろう」が口だけ出る", "行動は保留。"],
+            "101100": ["甘いもの or 炭水化物に屈する", "幸福度は上がる。"],
+            "101101": ["結局なにもしない", "でも焦ってはいない。"],
+            "101110": ["気づいたら5分過ぎてる", "時刻を二度見。"],
+            "101111": ["今日はこんな日だと悟る", "受容フェーズ。"],
+            "110000": ["急に現実的スイッチON", "短時間だけ有能。"],
+            "110001": ["1タスクだけ片付ける", "これは偉い。"],
+            "110010": ["計画を立て直したくなる", "立て直すだけ。"],
+            "110011": ["やる気を温存する判断", "賢い可能性あり。"],
+            "110100": ["軽く焦りつつ行動", "スピードは遅め。"],
+            "110101": ["「まあいいか」が発動", "精神安定。"],
+            "110110": ["集中しかけて途切れる", "惜しい。"],
+            "110111": ["未来の自分に託す", "信頼はしていない。"],
+            "111000": ["スマホを見ながら別のこと考える", "マルチタスク風。"],
+            "111001": ["通知→脱線→戻れない", "典型例。"],
+            "111010": ["甘いものを食べながら自己嫌悪", "それでもおいしい。"],
+            "111011": ["「あとで本気出す」宣言", "期限未定。"],
+            "111100": ["だるさMAX", "今日はこういう流れ。"],
+            "111101": ["すべてを正当化する脳", "理屈が強い。"],
+            "111110": ["5分後の自分、予想通り", "信頼度ゼロ。"],
+            "111111": ["何も進んでないけど、なぜか納得", "不思議と平和。"]
+        };
+
+        const remarks = [
+            "深呼吸を1回だけしてみましょう。",
+            "コップ1杯の水を飲むと、少し変わるかもしれません。",
+            "とりあえず、今の姿勢を褒めてあげてください。",
+            "世界は止まっていますが、時間は進んでいるようです。",
+            "5分後のあなたによろしく伝えておきます。"
+        ];
+
+        let currentStep = 0;
+        let answers = "";
+        const app = document.getElementById('app');
+
+        function render() {
+            if (currentStep < questions.length) {
+                app.innerHTML = `
+                    <div class="question-container" key="${currentStep}">
+                        <h1>5分後の自分予報</h1>
+                        <div class="question-text">${questions[currentStep]}</div>
+                        <div class="button-group">
+                            <button class="yes-btn" onclick="handleAnswer('1')">Yes</button>
+                            <button class="no-btn" onclick="handleAnswer('0')">No</button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                const res = results[answers];
+                const randomRemark = remarks[Math.floor(Math.random() * remarks.length)];
+                app.innerHTML = `
+                    <div class="question-container">
+                        <h1>予報結果</h1>
+                        <div class="result-title">${res[0]}</div>
+                        <div class="result-desc">${res[1]}</div>
+                        <div class="witty-remark">💡 ${randomRemark}</div>
+                        <br>
+                        <button class="retry-btn" onclick="location.reload()">最初からやり直す</button>
+                    </div>
+                `;
+            }
+        }
+
+        window.handleAnswer = (val) => {
+            answers += val;
+            currentStep++;
+            app.innerHTML = '';
+            setTimeout(render, 50);
+        };
+
+        render();
+    </script>
+</body>
+</html>
