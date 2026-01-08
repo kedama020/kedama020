@@ -1,264 +1,333 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>5分後の自分予報</title>
-    
-    <!-- ここにアイコン（ファビコン）の設定を追加しました -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>☁️</text></svg>">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>5分後のあなた予報</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Noto+Sans+JP:wght@400;700&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-color: #f2f2f2;
-            --text-color: #5a5a5a;
-            --accent-blue: #b0c4de;
-            --accent-yellow: #e9e4b2;
-            --card-bg: #ffffff;
-            --btn-hover: #fafafa;
-        }
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>☁️</text></svg>">
 
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: 'Zen Kaku Gothic New', 'Noto Sans JP', sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
-        }
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;700&family=Zen+Kaku+Gothic+New:wght@300;700&family=Kiwi+Maru:wght@300;500&display=swap" rel="stylesheet">
 
-        #app {
-            width: 90%;
-            max-width: 450px;
-            text-align: center;
-        }
+<style>
+:root{
+  --bg-color:#f6f6f4;
+  --text-color:#5a5a5a;
+  --accent-blue:#b8d8e8;
+  --glass-bg:rgba(255,255,255,0.55);
+  --glass-border:rgba(255,255,255,0.7);
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  background:var(--bg-color);
+  color:var(--text-color);
+  font-family:'Zen Kaku Gothic New','Inter',sans-serif;
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  overflow:hidden;
+}
+.ambient-bg{
+  position:fixed; inset:0; z-index:-1;
+  background:linear-gradient(120deg,#e0eafc,#cfdef3);
+}
+.aurora{
+  position:absolute; width:150%; height:150%;
+  top:-25%; left:-25%;
+  filter:blur(80px);
+  background:
+    radial-gradient(circle at 20% 30%, rgba(184,216,232,.4), transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(240,230,200,.3), transparent 40%);
+  animation:move 20s infinite alternate ease-in-out;
+}
+@keyframes move{
+  from{transform:translate(0,0);}
+  to{transform:translate(5%,5%);}
+}
+#app{width:90%;max-width:450px;}
+.fade-in{
+  opacity:0; transform:translateY(15px);
+  animation:fadeIn 1s cubic-bezier(.22,1,.36,1) .2s forwards;
+}
+@keyframes fadeIn{to{opacity:1;transform:none;}}
 
-        h1 {
-            font-size: 1rem;
-            font-weight: 400;
-            margin-bottom: 4rem;
-            letter-spacing: 0.2em;
-            color: #999;
-        }
+/* top */
+.top-container{text-align:center;}
+.clock-circle{
+  width:220px;height:220px;
+  margin:0 auto 2.5rem;
+  border-radius:50%;
+  background:var(--glass-bg);
+  border:1px solid var(--glass-border);
+  backdrop-filter:blur(10px);
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+}
+#digital-clock{
+  font-family:'Inter',sans-serif;
+  font-weight:200;
+  font-size:1.8rem;
+  letter-spacing:.1em;
+}
+.clock-label{
+  font-size:.6rem;
+  letter-spacing:.3em;
+  color:#aaa;
+  margin-top:5px;
+}
+.title-jp{
+  font-family:'Kiwi Maru','Zen Kaku Gothic New',sans-serif;
+  font-size:1.7rem;
+  font-weight:500;
+  letter-spacing:.25em;
+  margin-bottom:4rem;
+}
+.ghost-btn{
+  background:transparent;
+  border:1px solid #aaa;
+  border-radius:40px;
+  padding:16px 48px;
+  letter-spacing:.2em;
+  cursor:pointer;
+  transition:.4s;
+}
+.ghost-btn:hover{
+  border-color:var(--accent-blue);
+  box-shadow:0 0 20px rgba(184,216,232,.4);
+}
 
-        .question-container {
-            opacity: 0;
-            transform: translateY(10px);
-            animation: fadeIn 0.6s ease 0.2s forwards;
-        }
+/* question */
+.q-num{
+  font-family:'Inter',sans-serif;
+  font-size:.7rem;
+  letter-spacing:.4em;
+  color:#bbb;
+  margin-bottom:3rem;
+}
+.question-text{
+  font-size:1.2rem;
+  line-height:2;
+  margin-bottom:4rem;
+  min-height:5em;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0 20px;
+}
+.button-group{
+  display:flex;
+  justify-content:center;
+  gap:40px;
+}
+.choice-btn{
+  width:110px;height:110px;
+  border-radius:50%;
+  border:none;
+  background:white;
+  font-size:.95rem;
+  letter-spacing:.15em;
+  color:#666;
+  box-shadow:0 6px 16px rgba(0,0,0,.08);
+  cursor:pointer;
+  transition:.2s;
+}
+.choice-btn:hover{
+  transform:translateY(-3px);
+  box-shadow:0 10px 22px rgba(0,0,0,.12);
+}
 
-        @keyframes fadeIn {
-            to { opacity: 1; transform: translateY(0); }
-        }
+/* loading */
+.dot-loader{
+  width:8px;height:8px;
+  border-radius:50%;
+  background:var(--accent-blue);
+  margin:0 auto 2rem;
+  animation:pulse 1.5s infinite;
+}
+@keyframes pulse{
+  0%,100%{opacity:.3;transform:scale(.8);}
+  50%{opacity:1;transform:scale(1.2);}
+}
 
-        .question-text {
-            font-size: 1.2rem;
-            line-height: 1.8;
-            margin-bottom: 4rem;
-            min-height: 4em;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 20px;
-        }
-
-        .button-group {
-            display: flex;
-            gap: 30px;
-            justify-content: center;
-        }
-
-        button {
-            width: 110px;
-            height: 110px;
-            border-radius: 50%;
-            border: 1px solid #ddd;
-            background: var(--card-bg);
-            cursor: pointer;
-            font-family: 'Inter', sans-serif;
-            font-size: 1.1rem;
-            color: var(--text-color);
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        button:hover {
-            background: var(--btn-hover);
-            border-color: var(--accent-blue);
-            transform: scale(1.03);
-        }
-
-        .yes-btn:active { background-color: var(--accent-blue); color: white; }
-        .no-btn:active { background-color: #eee; }
-
-        .result-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 1.5rem;
-            color: #444;
-        }
-
-        .result-desc {
-            font-size: 1rem;
-            line-height: 1.8;
-            margin-bottom: 2rem;
-        }
-
-        .witty-remark {
-            font-size: 0.85rem;
-            color: #999;
-            font-style: italic;
-            margin-bottom: 3rem;
-            padding: 10px;
-            border-top: 1px dashed #ddd;
-            display: inline-block;
-        }
-
-        .retry-btn {
-            width: auto;
-            height: auto;
-            border-radius: 40px;
-            padding: 12px 40px;
-            font-size: 0.8rem;
-            border: 1px solid #ccc;
-        }
-    </style>
+/* result */
+.result-wrap{text-align:center;padding:0 20px;}
+.result-title{
+  font-size:1.7rem;
+  font-weight:700;
+  margin-bottom:1.2rem;
+}
+.result-desc{
+  font-size:1rem;
+  line-height:1.9;
+  margin-bottom:2.5rem;
+}
+.witty-remark{
+  font-size:.9rem;
+  color:#777;
+  line-height:1.8;
+  margin-bottom:2.5rem;
+}
+</style>
 </head>
+
 <body>
+<div class="ambient-bg"><div class="aurora"></div></div>
+<div id="app"></div>
 
-    <div id="app"></div>
+<script>
+const questions=[
+"今、座り直したい気持ちが少しある",
+"さっきから同じことを考えている気がする",
+"「今じゃなくてもいいか」が頭をよぎった",
+"飲み物を取りに行こうか一瞬迷った",
+"画面を見てるのに、内容が全部は入ってきていない",
+"5分後の自分が、今よりちゃんとしてるとは思えない"
+];
 
-    <script>
-        const questions = [
-            "今、座り直したい気持ちが少しある",
-            "さっきから同じことを考えている気がする",
-            "「今じゃなくてもいいか」が頭をよぎった",
-            "飲み物を取りに行こうか一瞬迷った",
-            "画面を見てるのに、内容が全部は入ってきていない",
-            "5分後の自分が、今よりちゃんとしてるとは思えない"
-        ];
+const results={
+"000000":["静かな5分後","何も起きない。たぶん天井を見てる。"],
+"000001":["謎の反省タイム突入","「さっきのあれ、いらなかったな」と思う。"],
+"000010":["やる気の芽が一瞬出る","すぐ引っ込む。"],
+"000011":["急に現実的になる","「まあ今日はこれでいいか」と納得。"],
+"000100":["脳内で独り言が増える","声には出さないが会話はしている。"],
+"000101":["何かを確認しに行って忘れる","戻ってきた時には目的不明。"],
+"000110":["軽くため息をつく","理由は特にない。"],
+"000111":["ちょっと賢くなった気がする","気のせい。"],
+"001000":["姿勢を直す","3秒で元に戻る。"],
+"001001":["昔の記憶が急に出てくる","今じゃなくていいやつ。"],
+"001010":["やる気が出そうで出ない","境界線をうろつく。"],
+"001011":["スマホを置こうとして失敗","持ち替えただけ。"],
+"001100":["何か飲みたくなる","水かコーヒーかで迷う。"],
+"001101":["「あと5分」が発生","ここが分岐点。"],
+"001110":["軽く現実逃避","空想はやや前向き。"],
+"001111":["自分に甘くなる","今日は特別、という理由を生成。"],
+"010000":["急にやる気が出る","5分限定。"],
+"010001":["やるべきことを1つ思い出す","実行するかは別。"],
+"010010":["ToDoを見て閉じる","情報量が多すぎた。"],
+"010011":["一旦落ち着こうとする","成功率40%。"],
+"010100":["軽く焦る","でもまだ本気じゃない。"],
+"010101":["「今じゃない」を選択","判断は正しい可能性あり。"],
+"010110":["作業BGMを探し始める","選曲に5分使う。"],
+"010111":["急に効率を語りたくなる","行動は伴わない。"],
+"011000":["何か始めるが中断","理由は通知。"],
+"011001":["自分を励ます","「まあ悪くない」"],
+"011010":["ちょっと未来を想像する","都合のいいやつ。"],
+"011011":["軽い罪悪感発生","反映は少し先。"],
+"011100":["甘いものを探す","見つかると満足。"],
+"011101":["何もしてないのに疲れを感じる","精神的なやつ。"],
+"011110":["5分が10分になる","時空が歪む。"],
+"011111":["一旦すべてを諦める","そして少し楽になる。"],
+"100000":["スマホを眺め続ける","情報は頭に入らない。"],
+"100001":["通知を確認して後悔","また見る。"],
+"100010":["無意識スクロール開始","親指が止まらない。"],
+"100011":["「何見てたっけ？」状態","記憶が消える。"],
+"100100":["誰かに連絡しようか迷う","送らない。"],
+"100101":["時間を無駄にした感覚","実害は小さい。"],
+"100110":["関係ない情報を学ぶ","明日には忘れる。"],
+"100111":["軽く笑う","なぜかは不明。"],
+"101000":["姿勢が悪化する","首が前に出る。"],
+"101001":["現実逃避レベル2","ちょっと楽しい。"],
+"101010":["やる気とだるさが同居","不安定。"],
+"101011":["「今やろう」が口だけ出る","行動は保留。"],
+"101100":["甘いもの or 炭水化物に屈する","幸福度は上がる。"],
+"101101":["結局なにもしない","でも焦ってはいない。"],
+"101110":["気づいたら5分過ぎてる","時刻を二度見。"],
+"101111":["今日はこんな日だと悟る","受容フェーズ。"],
+"110000":["急に現実的スイッチON","短時間だけ有能。"],
+"110001":["1タスクだけ片付ける","これは偉い。"],
+"110010":["計画を立て直したくなる","立て直すだけ。"],
+"110011":["やる気を温存する判断","賢い可能性あり。"],
+"110100":["軽く焦りつつ行動","スピードは遅め。"],
+"110101":["「まあいいか」が発動","精神安定。"],
+"110110":["集中しかけて途切れる","惜しい。"],
+"110111":["未来の自分に託す","信頼はしていない。"],
+"111000":["スマホを見ながら別のこと考える","マルチタスク風。"],
+"111001":["通知→脱線→戻れない","典型例。"],
+"111010":["甘いものを食べながら自己嫌悪","それでもおいしい。"],
+"111011":["「あとで本気出す」宣言","期限未定。"],
+"111100":["だるさMAX","今日はこういう流れ。"],
+"111101":["すべてを正当化する脳","理屈が強い。"],
+"111110":["5分後の自分、予想通り","信頼度ゼロ。"],
+"111111":["何も進んでないけど、なぜか納得","不思議と平和。"]
+};
 
-        const results = {
-            "000000": ["静かな5分後", "何も起きない。たぶん天井を見てる。"],
-            "000001": ["謎の反省タイム突入", "「さっきのあれ、いらなかったな」と思う。"],
-            "000010": ["やる気の芽が一瞬出る", "すぐ引っ込む。"],
-            "000011": ["急に現実的になる", "「まあ今日はこれでいいか」と納得。"],
-            "000100": ["脳内で独り言が増える", "声には出さないが会話はしている。"],
-            "000101": ["何かを確認しに行って忘れる", "戻ってきた時には目的不明。"],
-            "000110": ["軽くため息をつく", "理由は特にない。"],
-            "000111": ["ちょっと賢くなった気がする", "気のせい。"],
-            "001000": ["姿勢を直す", "3秒で元に戻る。"],
-            "001001": ["昔の記憶が急に出てくる", "今じゃなくていいやつ。"],
-            "001010": ["やる気が出そうで出ない", "境界線をうろつく。"],
-            "001011": ["スマホを置こうとして失敗", "持ち替えただけ。"],
-            "001100": ["何か飲みたくなる", "水かコーヒーかで迷う。"],
-            "001101": ["「あと5分」が発生", "ここが分岐点。"],
-            "001110": ["軽く現実逃避", "空想はやや前向き。"],
-            "001111": ["自分に甘くなる", "今日は特別、という理由を生成。"],
-            "010000": ["急にやる気が出る", "5分限定。"],
-            "010001": ["やるべきことを1つ思い出す", "実行するかは別。"],
-            "010010": ["ToDoを見て閉じる", "情報量が多すぎた。"],
-            "010011": ["一旦落ち着こうとする", "成功率40%。"],
-            "010100": ["軽く焦る", "でもまだ本気じゃない。"],
-            "010101": ["「今じゃない」を選択", "判断は正しい可能性あり。"],
-            "010110": ["作業BGMを探し始める", "選曲に5分使う。"],
-            "010111": ["急に効率を語りたくなる", "行動は伴わない。"],
-            "011000": ["何か始めるが中断", "理由は通知。"],
-            "011001": ["自分を励ます", "「まあ悪くない」"],
-            "011010": ["ちょっと未来を想像する", "都合のいいやつ。"],
-            "011011": ["軽い罪悪感発生", "反映は少し先。"],
-            "011100": ["甘いものを探す", "見つかると満足。"],
-            "011101": ["何もしてないのに疲れる", "精神的なやつ。"],
-            "011110": ["5分が10分になる", "時空が歪む。"],
-            "011111": ["一旦すべてを諦める", "そして少し楽になる。"],
-            "100000": ["スマホを眺め続ける", "情報は頭に入らない。"],
-            "100001": ["通知を確認して後悔", "でもまた見る。"],
-            "100010": ["無意識スクロール開始", "親指が止まらない。"],
-            "100011": ["「何見てたっけ？」状態", "記憶が消える。"],
-            "100100": ["誰かに連絡しようか迷う", "送らない。"],
-            "100101": ["時間を無駄にした感覚", "実害は小さい。"],
-            "100110": ["関係ない情報を学ぶ", "明日には忘れる。"],
-            "100111": ["軽く笑う", "なぜかは不明。"],
-            "101000": ["姿勢が悪化する", "首が前に出る。"],
-            "101001": ["現実逃避レベル2", "ちょっと楽しい。"],
-            "101010": ["やる気とだるさが同居", "不安定。"],
-            "101011": ["「今やろう」が口だけ出る", "行動は保留。"],
-            "101100": ["甘いもの or 炭水化物に屈する", "幸福度は上がる。"],
-            "101101": ["結局なにもしない", "でも焦ってはいない。"],
-            "101110": ["気づいたら5分過ぎてる", "時刻を二度見。"],
-            "101111": ["今日はこんな日だと悟る", "受容フェーズ。"],
-            "110000": ["急に現実的スイッチON", "短時間だけ有能。"],
-            "110001": ["1タスクだけ片付ける", "これは偉い。"],
-            "110010": ["計画を立て直したくなる", "立て直すだけ。"],
-            "110011": ["やる気を温存する判断", "賢い可能性あり。"],
-            "110100": ["軽く焦りつつ行動", "スピードは遅め。"],
-            "110101": ["「まあいいか」が発動", "精神安定。"],
-            "110110": ["集中しかけて途切れる", "惜しい。"],
-            "110111": ["未来の自分に託す", "信頼はしていない。"],
-            "111000": ["スマホを見ながら別のこと考える", "マルチタスク風。"],
-            "111001": ["通知→脱線→戻れない", "典型例。"],
-            "111010": ["甘いものを食べながら自己嫌悪", "それでもおいしい。"],
-            "111011": ["「あとで本気出す」宣言", "期限未定。"],
-            "111100": ["だるさMAX", "今日はこういう流れ。"],
-            "111101": ["すべてを正当化する脳", "理屈が強い。"],
-            "111110": ["5分後の自分、予想通り", "信頼度ゼロ。"],
-            "111111": ["何も進んでないけど、なぜか納得", "不思議と平和。"]
-        };
+const remarks=[
+"深呼吸を1回だけしてみましょう。",
+"コップ1杯の水を飲むと、少し変わるかもしれません。",
+"5分後のあなたによろしく伝えておきます。"
+];
 
-        const remarks = [
-            "深呼吸を1回だけしてみましょう。",
-            "コップ1杯の水を飲むと、少し変わるかもしれません。",
-            "とりあえず、今の姿勢を褒めてあげてください。",
-            "世界は止まっていますが、時間は進んでいるようです。",
-            "5分後のあなたによろしく伝えておきます。"
-        ];
+let currentStep=-1;
+let answers="";
+let clockTimer=null;
+const app=document.getElementById("app");
 
-        let currentStep = 0;
-        let answers = "";
-        const app = document.getElementById('app');
+function updateClock(){
+  const n=new Date();
+  const t=[n.getHours(),n.getMinutes(),n.getSeconds()].map(v=>String(v).padStart(2,"0")).join(":");
+  const el=document.getElementById("digital-clock");
+  if(el) el.textContent=t;
+}
 
-        function render() {
-            if (currentStep < questions.length) {
-                app.innerHTML = `
-                    <div class="question-container" key="${currentStep}">
-                        <h1>5分後の自分予報</h1>
-                        <div class="question-text">${questions[currentStep]}</div>
-                        <div class="button-group">
-                            <button class="yes-btn" onclick="handleAnswer('1')">Yes</button>
-                            <button class="no-btn" onclick="handleAnswer('0')">No</button>
-                        </div>
-                    </div>
-                `;
-            } else {
-                const res = results[answers];
-                const randomRemark = remarks[Math.floor(Math.random() * remarks.length)];
-                app.innerHTML = `
-                    <div class="question-container">
-                        <h1>予報結果</h1>
-                        <div class="result-title">${res[0]}</div>
-                        <div class="result-desc">${res[1]}</div>
-                        <div class="witty-remark">💡 ${randomRemark}</div>
-                        <br>
-                        <button class="retry-btn" onclick="location.reload()">最初からやり直す</button>
-                    </div>
-                `;
-            }
-        }
+function render(){
+  app.innerHTML="";
 
-        window.handleAnswer = (val) => {
-            answers += val;
-            currentStep++;
-            app.innerHTML = '';
-            setTimeout(render, 50);
-        };
+  if(currentStep===-1){
+    app.innerHTML=`
+      <div class="top-container fade-in">
+        <div class="clock-circle">
+          <div id="digital-clock">00:00:00</div>
+          <div class="clock-label">CURRENT TIME</div>
+        </div>
+        <div class="title-jp">5分後のあなた予報</div>
+        <button class="ghost-btn" onclick="nextStep()">予報を開始する</button>
+      </div>`;
+    if(!clockTimer){
+      clockTimer=setInterval(updateClock,1000);
+    }
+    updateClock();
 
-        render();
-    </script>
+  }else if(currentStep<questions.length){
+    app.innerHTML=`
+      <div class="fade-in">
+        <div class="q-num">STEP 0${currentStep+1} / 06</div>
+        <div class="question-text">${questions[currentStep]}</div>
+        <div class="button-group">
+          <button class="choice-btn" onclick="answer('1')">YES</button>
+          <button class="choice-btn" onclick="answer('0')">NO</button>
+        </div>
+      </div>`;
+
+  }else if(currentStep===questions.length){
+    app.innerHTML=`
+      <div class="fade-in" style="text-align:center;">
+        <div class="dot-loader"></div>
+        <div style="color:#888;">５分後のあなたに接続中...</div>
+      </div>`;
+    setTimeout(nextStep,2000);
+
+  }else{
+    const r=results[answers] || ["予測不能な5分後","未来が少しぼやけています。"];
+    const w=remarks[Math.random()*remarks.length|0];
+    app.innerHTML=`
+      <div class="fade-in result-wrap">
+        <div class="q-num">FORECAST RESULT</div>
+        <div class="result-title">${r[0]}</div>
+        <div class="result-desc">${r[1]}</div>
+        <div class="witty-remark">💡 ${w}</div>
+        <button class="ghost-btn" onclick="location.reload()">もう一度診断する</button>
+      </div>`;
+  }
+}
+
+function nextStep(){currentStep++;render();}
+function answer(v){answers+=v;nextStep();}
+render();
+</script>
 </body>
 </html>
+
